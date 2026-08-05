@@ -13,13 +13,29 @@ const platforms: Array<{ id: Platform; label: string; description: string }> = [
   { id: "mac", label: "MacFinancial", description: "PPA comercial" },
 ];
 
+function HqsBrand() {
+  return (
+    <div className="brand-lockup" aria-label="HQS Energy">
+      <div className="brand-symbol" aria-hidden="true">
+        <span className="brand-flame brand-flame-blue" />
+        <span className="brand-flame brand-flame-gold" />
+        <span className="brand-flame brand-flame-green" />
+      </div>
+      <div className="brand-wordmark">
+        <strong>HQS</strong>
+        <span>ENERGY</span>
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [platform, setPlatform] = useState<Platform>("sunrun");
 
   return (
     <main className="app-shell">
       <header className="brand-header">
-        <img src="/hqs-logo.png" alt="HQS Energy" className="brand-logo" />
+        <HqsBrand />
         <div className="header-copy">
           <p className="eyebrow">HQS ENERGY</p>
           <h1>Commercial Platform</h1>
