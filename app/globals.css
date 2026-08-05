@@ -15,7 +15,15 @@ button,input,select{font:inherit}
 button{cursor:pointer}
 .app-shell{max-width:1240px;margin:auto;padding:28px 22px 42px}
 .brand-header{display:flex;align-items:center;gap:28px;padding:22px 26px;background:rgba(255,255,255,.9);border:1px solid #e7ebf0;border-radius:24px;box-shadow:0 16px 40px rgba(47,63,80,.055)}
-.brand-logo{width:260px;max-height:76px;object-fit:contain;object-position:left center}
+.brand-lockup{display:flex;align-items:center;gap:14px;min-width:260px}
+.brand-symbol{position:relative;width:62px;height:72px;flex:0 0 62px}
+.brand-flame{position:absolute;display:block;border-radius:70% 18% 65% 28%;transform:rotate(35deg);box-shadow:inset -5px -7px 10px rgba(255,255,255,.28)}
+.brand-flame-blue{width:42px;height:60px;left:9px;top:4px;background:linear-gradient(145deg,#2a92cc,#1f6fa7)}
+.brand-flame-gold{width:27px;height:43px;left:28px;top:20px;background:linear-gradient(145deg,#f0b43f,#dd7f20)}
+.brand-flame-green{width:18px;height:29px;left:18px;top:35px;background:linear-gradient(145deg,#63aa7c,#3e8661)}
+.brand-wordmark{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand-wordmark strong{font-size:38px;line-height:1;letter-spacing:-.04em;color:#2f84b6;font-weight:900}
+.brand-wordmark span{font-size:27px;line-height:1;letter-spacing:.08em;color:#de8c2e;font-weight:800}
 .header-copy{border-left:1px solid #e7ebf0;padding-left:28px}
 .eyebrow{margin:0 0 4px;font-size:11px;letter-spacing:.18em;font-weight:800;color:#5c96ae}
 .header-copy h1,.section-heading h2{margin:0;color:#25313d;letter-spacing:-.025em}
@@ -66,5 +74,5 @@ input:focus,select:focus{outline:none;border-color:#87bed2;box-shadow:0 0 0 3px 
 .primary-result strong{display:block;margin-top:7px;color:#426f82;font-size:30px;letter-spacing:-.025em}
 .primary-result small{display:block;margin-top:5px;color:#83909c}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-@media(max-width:860px){.app-shell{padding:16px 12px 28px}.brand-header{display:block;padding:18px}.brand-logo{width:220px}.header-copy{border-left:0;border-top:1px solid #e7ebf0;padding:16px 0 0;margin-top:14px}.platform-nav,.calculator-grid{grid-template-columns:1fr}}
-@media(max-width:520px){.form-grid,.form-grid.compact,.hero-metrics,.metrics-grid,.inline-summary{grid-template-columns:1fr}}
+@media(max-width:860px){.app-shell{padding:16px 12px 28px}.brand-header{display:block;padding:18px}.brand-lockup{min-width:0}.header-copy{border-left:0;border-top:1px solid #e7ebf0;padding:16px 0 0;margin-top:14px}.platform-nav,.calculator-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.brand-wordmark strong{font-size:30px}.brand-wordmark span{font-size:21px}.form-grid,.form-grid.compact,.hero-metrics,.metrics-grid,.inline-summary{grid-template-columns:1fr}}
