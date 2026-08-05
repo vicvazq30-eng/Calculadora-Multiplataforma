@@ -3,29 +3,68 @@
 @tailwind utilities;
 
 :root{
-  --primary:#2C6FA3;
-  --primary-light:#EDF5FB;
-  --secondary:#F28C28;
-  --background:#FAFBFC;
-  --card:#FFFFFF;
-  --border:#E5E7EB;
-  --text:#1F2937;
-  --muted:#6B7280;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#26313d;
+  background:#f7f9fc;
+  font-synthesis:none;
 }
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
-html,
-body{
-  background:var(--background);
-  color:var(--text);
-  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-body{
-  min-height:100vh;
-}
+*{box-sizing:border-box}
+html,body{margin:0;min-width:320px;min-height:100vh}
+body{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app-shell{max-width:1240px;margin:auto;padding:28px 22px 42px}
+.brand-header{display:flex;align-items:center;gap:28px;padding:22px 26px;background:rgba(255,255,255,.9);border:1px solid #e7ebf0;border-radius:24px;box-shadow:0 16px 40px rgba(47,63,80,.055)}
+.brand-logo{width:260px;max-height:76px;object-fit:contain;object-position:left center}
+.header-copy{border-left:1px solid #e7ebf0;padding-left:28px}
+.eyebrow{margin:0 0 4px;font-size:11px;letter-spacing:.18em;font-weight:800;color:#5c96ae}
+.header-copy h1,.section-heading h2{margin:0;color:#25313d;letter-spacing:-.025em}
+.header-copy h1{font-size:28px}
+.header-copy>p:last-child{margin:6px 0 0;color:#7b8795;font-size:14px}
+.platform-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.platform-tab{padding:15px 17px;text-align:left;background:#fff;border:1px solid #e3e8ee;border-radius:16px;color:#788491;transition:.18s ease}
+.platform-tab:hover{border-color:#cdd9e2;transform:translateY(-1px)}
+.platform-tab.active{border-color:#a8cddc;background:#fafdfe;box-shadow:inset 0 -3px 0 #78b8cf}
+.platform-tab strong{display:block;color:#31404d;font-size:15px}
+.platform-tab.active strong{color:#4f8fa7}
+.platform-tab span{display:block;margin-top:3px;font-size:12px}
+.module-stage{animation:fade .22s ease}
+.calculator-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.module-card{background:#fff;border:1px solid #e5eaf0;border-radius:22px;padding:19px;box-shadow:0 12px 30px rgba(48,63,79,.05)}
+.section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.section-heading h2{font-size:21px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid.compact{grid-template-columns:repeat(2,1fr)}
+.field{display:block}
+.field.full{grid-column:1/-1}
+.field>span{display:block;margin:0 0 7px;color:#4d5a67;font-size:13px;font-weight:750}
+input,select,.readout{width:100%;height:46px;border:1px solid #dbe2e9;border-radius:12px;background:#fafbfd;color:#293744;padding:0 13px;font-weight:700}
+input:focus,select:focus{outline:none;border-color:#87bed2;box-shadow:0 0 0 3px rgba(120,184,207,.13);background:#fff}
+.readout{display:flex;align-items:center;color:#65727f}
+.hero-metrics,.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.metric-card{min-height:83px;padding:13px;border:1px solid #e4e9ee;border-radius:16px;background:#fbfcfd}
+.metric-card span{display:block;color:#7a8794;font-size:12px;font-weight:700}
+.metric-card strong{display:block;margin-top:8px;color:#2c3945;font-size:20px;line-height:1.15;font-weight:850}
+.metric-card small{display:block;margin-top:6px;color:#aa7f39;font-size:11px;font-weight:750}
+.metric-card.blue{background:#f1f8fa;border-color:#d5e9f0}
+.metric-card.blue strong{color:#4f8fa7;font-size:26px}
+.metric-card.gold{background:#fffaf2;border-color:#eee1c9}
+.metric-card.gold strong{color:#a77d37}
+.metric-card.soft{background:#f8fafc}
+.metric-card.green strong{color:#5f9478}
+.alert{margin-top:10px;padding:10px 12px;background:#fff7f7;border:1px solid #efdede;border-radius:12px;color:#ad6666;font-size:13px;font-weight:700}
+.consumption-block{margin-top:12px;padding-top:14px;border-top:1px solid #e8edf1}
+.consumption-block h3{margin:0 0 10px;font-size:15px}
+.inline-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.inline-summary span{padding:10px;border:1px solid #e6ebef;border-radius:12px;background:#fbfcfd;color:#7b8794;font-size:11px}
+.inline-summary strong{display:block;margin-top:4px;color:#34424f;font-size:15px}
+.segmented{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;padding:4px;background:#f5f7f9;border-radius:13px}
+.segmented button{height:38px;border:0;border-radius:10px;background:transparent;color:#778490;font-weight:750}
+.segmented button.active{background:#fff;color:#4f8fa7;box-shadow:0 2px 8px rgba(44,61,77,.07)}
+.primary-result{padding:18px;border:1px solid #d9e7ed;border-radius:18px;background:#f4fafc}
+.primary-result span{display:block;color:#71808d;font-size:12px;font-weight:700}
+.primary-result strong{display:block;margin-top:7px;color:#426f82;font-size:30px;letter-spacing:-.025em}
+.primary-result small{display:block;margin-top:5px;color:#83909c}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:860px){.app-shell{padding:16px 12px 28px}.brand-header{display:block;padding:18px}.brand-logo{width:220px}.header-copy{border-left:0;border-top:1px solid #e7ebf0;padding:16px 0 0;margin-top:14px}.platform-nav,.calculator-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.form-grid,.form-grid.compact,.hero-metrics,.metrics-grid,.inline-summary{grid-template-columns:1fr}}
