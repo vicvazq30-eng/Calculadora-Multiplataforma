@@ -6,6 +6,9 @@ import { Field, Metric, money, number } from "./ui";
 const WATTS = 410;
 const HOURS = 1440;
 const STEPPED_FACTOR = 0.8475;
+const SOLAR_RATE = 2.35;
+
+type CommissionMode = "pv" | "full";
 
 const fixedTable: Record<string, [[number, number], [number, number]]> = {
   "10-1": [[4.551, 192.63], [4.48, 189.96]],
@@ -53,7 +56,22 @@ function fixedEstimate(panels: number, batteries: number, epc: number) {
   return lastPay + ((panels - last.p) * (lastPay - previousPay)) / (last.p - previous.p);
 }
 
+function pvBatteryEpcCost(batteries: number) {
+  if (batteries <= 0) return 0;
+  return 10000 + Math.max(batteries - 1, 0) * 12000;
+}
+
+function pvCommissionBatteryCost(batteries: number) {
+  return Math.max(batteries - 1, 0) * 12000;
+}
+
+function fullBatteryCost(batteries: number) {
+  const prices = [12500, 12000, 11000, 10500];
+  return prices.slice(0, Math.max(0, batteries)).reduce((sum, price) => sum + price, 0);
+}
+
 export default function SunrunCalculator() {
+  const [commissionMode, setCommissionMode] = useState<CommissionMode>("pv");
   const [panels, setPanels] = useState(20);
   const [batteries, setBatteries] = useState(1);
   const [role, setRole] = useState(0.1);
@@ -62,30 +80,78 @@ export default function SunrunCalculator() {
 
   const result = useMemo(() => {
     const eligible = panels >= 10 && !(batteries >= 2 && panels < 22);
-    const multiplier = batteries >= 2 ? 2.17 : panels <= 16 ? 2.15 : 2.25;
-    const batteryUnit = batteries === 1 ? (panels <= 13 ? 10500 : panels <= 20 ? 11000 : 11500) : 10500;
-    const batteryTotal = eligible ? batteries * batteryUnit : 0;
     const watts = panels * WATTS;
-    const pv = eligible ? watts * multiplier : 0;
+    const pv = eligible ? watts * SOLAR_RATE : 0;
+
+    const batteryTotal = eligible
+      ? commissionMode === "pv"
+        ? pvBatteryEpcCost(batteries)
+        : fullBatteryCost(batteries)
+      : 0;
+
+    const commissionBase = eligible
+      ? commissionMode === "pv"
+        ? pv + pvCommissionBatteryCost(batteries)
+        : pv + batteryTotal
+      : 0;
+
     const baseSystem = eligible ? pv + batteryTotal : 0;
     const epcBase = eligible && watts ? baseSystem / watts : 0;
     const finalEpc = saleEpc > 0 ? saleEpc : epcBase;
     const saleSystem = eligible ? watts * finalEpc : 0;
-    const margin = Math.max(saleSystem - baseSystem, 0);
+
+    // El diferencial se mantiene con signo. Si se vende por debajo del EPC base,
+    // la comisión de venta será negativa y se resta, como en la lógica original.
+    const margin = saleSystem - baseSystem;
     const saleCommission = margin > 4000 ? margin * 0.7 : margin;
+
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
     const average = months.reduce((sum, item) => sum + item, 0) / 3;
     const annualConsumption = average * 12;
     const offset = annualConsumption ? (annual / annualConsumption) * 100 : 0;
     const fixed = eligible ? fixedEstimate(panels, batteries, finalEpc) : 0;
-    return { eligible, epcBase, finalEpc, baseSystem, saleSystem, margin, saleCommission, annual, monthly, average, annualConsumption, offset, fixed, baseCommission: baseSystem * role };
-  }, [panels, batteries, role, saleEpc, months]);
+
+    return {
+      eligible,
+      epcBase,
+      finalEpc,
+      baseSystem,
+      saleSystem,
+      margin,
+      saleCommission,
+      annual,
+      monthly,
+      average,
+      annualConsumption,
+      offset,
+      fixed,
+      baseCommission: commissionBase * role,
+    };
+  }, [commissionMode, panels, batteries, role, saleEpc, months]);
 
   return (
     <div className="calculator-grid">
       <section className="module-card">
         <div className="section-heading"><h2>Sunrun</h2></div>
+
+        <div className="segmented">
+          <button
+            type="button"
+            className={commissionMode === "full" ? "active" : ""}
+            onClick={() => setCommissionMode("full")}
+          >
+            Full Comisión
+          </button>
+          <button
+            type="button"
+            className={commissionMode === "pv" ? "active" : ""}
+            onClick={() => setCommissionMode("pv")}
+          >
+            PV Comisión
+          </button>
+        </div>
+
         <div className="form-grid">
           <Field label="Cantidad de paneles"><input type="number" min={0} value={panels} onChange={(e) => setPanels(Number(e.target.value))} /></Field>
           <Field label="Watts por panel"><div className="readout">410 W</div></Field>
@@ -109,7 +175,12 @@ export default function SunrunCalculator() {
           <Metric label="Sistema base" value={money(result.baseSystem)} />
           <Metric label="Comisión base" value={money(result.baseCommission)} tone="gold" />
           <Metric label="Sistema venta" value={money(result.saleSystem)} />
-          <Metric label="Comisión de venta" value={money(result.saleCommission)} tone="gold" note={result.margin > 4000 ? "70% vendedor · 30% compañía" : ""} />
+          <Metric
+            label="Comisión de venta"
+            value={money(result.saleCommission)}
+            tone="gold"
+            note={result.margin > 4000 ? "70% vendedor · 30% compañía" : ""}
+          />
         </div>
       </section>
     </div>
