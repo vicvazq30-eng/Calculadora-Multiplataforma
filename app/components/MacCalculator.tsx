@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Field, Metric, money, number } from "./ui";
 
 type PanelType = "410" | "440";
@@ -25,6 +25,18 @@ export default function MacCalculator() {
   const [batteryBrand, setBatteryBrand] = useState<BatteryBrand>("none");
   const [batteries, setBatteries] = useState(0);
   const [role, setRole] = useState(0.1);
+
+  useEffect(() => {
+    const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".platform-tab"));
+    const cashTab = tabs.find((tab) => tab.querySelector("strong")?.textContent === "MacFinancial");
+
+    if (cashTab) {
+      const title = cashTab.querySelector("strong");
+      const description = cashTab.querySelector("span");
+      if (title) title.textContent = "Cash";
+      if (description) description.textContent = "Casos cash y comisiones";
+    }
+  }, []);
 
   const result = useMemo(() => {
     const safePanels = Math.max(0, Number(panels) || 0);
