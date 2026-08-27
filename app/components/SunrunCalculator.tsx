@@ -5,55 +5,97 @@ import { Field, Metric, money, number } from "./ui";
 
 const WATTS = 410;
 const HOURS = 1440;
-const STEPPED_FACTOR = 0.8475;
 const SOLAR_RATE = 2.35;
 
 type CommissionMode = "pv" | "full";
+type PaymentPoint = [number, number];
+type PaymentTable = Record<number, Record<number, PaymentPoint[]>>;
 
-const fixedTable: Record<string, [[number, number], [number, number]]> = {
-  "10-1": [[4.551, 192.63], [4.48, 189.96]],
-  "12-1": [[4.112, 205.96], [4.041, 202.76]],
-  "14-1": [[3.992, 229.41], [3.921, 225.68]],
-  "16-1": [[3.796, 246.48], [3.725, 242.22]],
-  "18-1": [[3.644, 263.53], [3.573, 258.74]],
-  "20-1": [[3.523, 280.6], [3.452, 275.27]],
-  "22-1": [[3.425, 297.65], [3.353, 291.79]],
-  "22-2": [[4.333, 384.2], [4.263, 378.33]],
-  "24-2": [[4.149, 399.13], [4.078, 392.73]],
+const fixedTable: PaymentTable = {
+  1: {
+    10: [[5.423, 217.67], [5.346, 214.91], [5.269, 212.15], [5.192, 209.39], [5.116, 206.63], [5.039, 203.87], [4.962, 201.11], [4.886, 198.35], [4.809, 195.59]],
+    14: [[4.540, 249.14], [4.462, 245.28], [4.385, 241.41], [4.309, 237.54], [4.232, 233.68], [4.155, 229.81], [4.078, 225.95]],
+    18: [[4.180, 288.89], [4.102, 283.92], [4.025, 278.95], [3.948, 273.98], [3.871, 269.01], [3.794, 264.04], [3.716, 259.07]],
+    22: [[3.797, 316.49], [3.720, 310.42], [3.643, 304.35], [3.565, 298.27], [3.488, 292.20]],
+  },
+  2: {
+    22: [[5.108, 432.57], [5.031, 426.49], [4.955, 420.42], [4.879, 414.35], [4.803, 408.27], [4.727, 402.20]],
+    24: [[4.916, 451.89], [4.840, 445.26], [4.764, 438.64], [4.687, 432.01], [4.611, 425.39], [4.535, 418.76]],
+  },
 };
 
-function interpolate(points: [[number, number], [number, number]], epc: number) {
-  const [[e1, p1], [e2, p2]] = points;
+const steppedTable: PaymentTable = {
+  1: {
+    10: [[5.431, 184.24], [5.342, 181.48], [5.252, 178.72], [5.163, 175.96], [5.073, 173.19], [4.984, 170.43], [4.894, 167.67], [4.804, 164.91], [4.715, 162.15]],
+    14: [[4.541, 210.74], [4.451, 206.87], [4.360, 203.00], [4.270, 199.14], [4.180, 195.28], [4.090, 191.41]],
+    18: [[4.075, 238.89], [3.985, 233.92], [3.894, 228.95], [3.804, 223.98], [3.713, 219.01]],
+    22: [[3.769, 266.49], [3.679, 260.42], [3.589, 254.35], [3.498, 248.27], [3.408, 242.20]],
+  },
+  2: {
+    22: [[5.120, 369.01], [5.031, 362.93], [4.942, 356.86], [4.852, 350.79], [4.763, 344.71]],
+    24: [[4.925, 385.02], [4.836, 378.39], [4.746, 371.77], [4.657, 365.14], [4.567, 358.51]],
+  },
+};
+
+function interpolatePayment(points: PaymentPoint[], epc: number) {
+  const sorted = [...points].sort((a, b) => a[0] - b[0]);
+
+  let left = sorted[0];
+  let right = sorted[1];
+
+  if (epc >= sorted[sorted.length - 1][0]) {
+    left = sorted[sorted.length - 2];
+    right = sorted[sorted.length - 1];
+  } else if (epc > sorted[0][0]) {
+    for (let index = 0; index < sorted.length - 1; index += 1) {
+      if (epc >= sorted[index][0] && epc <= sorted[index + 1][0]) {
+        left = sorted[index];
+        right = sorted[index + 1];
+        break;
+      }
+    }
+  }
+
+  const [e1, p1] = left;
+  const [e2, p2] = right;
   return p1 + ((epc - e1) * (p2 - p1)) / (e2 - e1);
 }
 
-function fixedEstimate(panels: number, batteries: number, epc: number) {
-  const exact = fixedTable[`${panels}-${batteries}`];
-  if (exact) return interpolate(exact, epc);
-  const rows = Object.keys(fixedTable)
-    .map((key) => {
-      const [p, b] = key.split("-").map(Number);
-      return { key, p, b };
-    })
-    .filter((row) => row.b === batteries)
-    .sort((a, b) => a.p - b.p);
-  if (!rows.length) return 0;
-  if (panels <= rows[0].p) return interpolate(fixedTable[rows[0].key], epc);
-  for (let index = 0; index < rows.length - 1; index += 1) {
-    const left = rows[index];
-    const right = rows[index + 1];
-    if (panels >= left.p && panels <= right.p) {
-      const lp = interpolate(fixedTable[left.key], epc);
-      const rp = interpolate(fixedTable[right.key], epc);
-      return lp + ((panels - left.p) / (right.p - left.p)) * (rp - lp);
+function paymentEstimate(table: PaymentTable, panels: number, batteries: number, epc: number) {
+  const batteryTable = table[batteries];
+  if (!batteryTable || !epc) return 0;
+
+  const panelRows = Object.keys(batteryTable).map(Number).sort((a, b) => a - b);
+  if (!panelRows.length) return 0;
+
+  const paymentAt = (panelCount: number) => interpolatePayment(batteryTable[panelCount], epc);
+
+  if (batteryTable[panels]) return paymentAt(panels);
+  if (panelRows.length === 1) return paymentAt(panelRows[0]);
+
+  if (panels <= panelRows[0]) {
+    const leftPanel = panelRows[0];
+    const rightPanel = panelRows[1];
+    const leftPayment = paymentAt(leftPanel);
+    const rightPayment = paymentAt(rightPanel);
+    return leftPayment + ((panels - leftPanel) / (rightPanel - leftPanel)) * (rightPayment - leftPayment);
+  }
+
+  for (let index = 0; index < panelRows.length - 1; index += 1) {
+    const leftPanel = panelRows[index];
+    const rightPanel = panelRows[index + 1];
+    if (panels >= leftPanel && panels <= rightPanel) {
+      const leftPayment = paymentAt(leftPanel);
+      const rightPayment = paymentAt(rightPanel);
+      return leftPayment + ((panels - leftPanel) / (rightPanel - leftPanel)) * (rightPayment - leftPayment);
     }
   }
-  const last = rows.at(-1)!;
-  const previous = rows.at(-2);
-  if (!previous) return interpolate(fixedTable[last.key], epc);
-  const lastPay = interpolate(fixedTable[last.key], epc);
-  const previousPay = interpolate(fixedTable[previous.key], epc);
-  return lastPay + ((panels - last.p) * (lastPay - previousPay)) / (last.p - previous.p);
+
+  const rightPanel = panelRows[panelRows.length - 1];
+  const leftPanel = panelRows[panelRows.length - 2];
+  const rightPayment = paymentAt(rightPanel);
+  const leftPayment = paymentAt(leftPanel);
+  return rightPayment + ((panels - rightPanel) / (rightPanel - leftPanel)) * (rightPayment - leftPayment);
 }
 
 function pvBatteryEpcCost(batteries: number) {
@@ -110,7 +152,8 @@ export default function SunrunCalculator() {
     const average = months.reduce((sum, item) => sum + item, 0) / 3;
     const annualConsumption = average * 12;
     const offset = annualConsumption ? (annual / annualConsumption) * 100 : 0;
-    const fixed = eligible ? fixedEstimate(panels, batteries, finalEpc) : 0;
+    const fixed = eligible ? paymentEstimate(fixedTable, panels, batteries, finalEpc) : 0;
+    const stepped = eligible ? paymentEstimate(steppedTable, panels, batteries, finalEpc) : 0;
 
     return {
       eligible,
@@ -126,6 +169,7 @@ export default function SunrunCalculator() {
       annualConsumption,
       offset,
       fixed,
+      stepped,
       baseCommission: commissionBase * role,
     };
   }, [commissionMode, panels, batteries, role, saleEpc, months]);
@@ -161,7 +205,7 @@ export default function SunrunCalculator() {
         </div>
         {!result.eligible ? <div className="alert">Sistema no elegible. Mínimo 10 paneles; 2 baterías requieren 22 paneles.</div> : null}
         <div className="hero-metrics"><Metric label="EPC base" value={result.epcBase.toFixed(2)} tone="blue" /><Metric label="EPC venta" value={result.finalEpc.toFixed(2)} tone="blue" /></div>
-        <div className="hero-metrics"><Metric label="Pago fijo aproximado" value={money(result.fixed)} /><Metric label="Pago escalonado aproximado" value={money(result.fixed * STEPPED_FACTOR)} tone="gold" /></div>
+        <div className="hero-metrics"><Metric label="Pago fijo aproximado" value={money(result.fixed)} /><Metric label="Pago escalonado aproximado" value={money(result.stepped)} tone="gold" /></div>
         <div className="consumption-block"><h3>Promedio de consumo</h3><div className="form-grid compact">{months.map((value, index) => <Field key={index} label={`Mes alto ${index + 1}`}><input type="number" value={value} onChange={(e) => setMonths((current) => current.map((item, i) => i === index ? Number(e.target.value) : item))} /></Field>)}</div></div>
       </section>
 
