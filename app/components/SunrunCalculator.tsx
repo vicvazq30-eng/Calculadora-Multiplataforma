@@ -1,11 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Field, Metric, money, number } from "./ui";
 
 const WATTS = 410;
 const HOURS = 1440;
 const SOLAR_RATE = 2.35;
+const PANEL_MONTHLY_KWH = ((WATTS * HOURS) / 1000) / 12;
+
+const AIR_SEER: Record<number, number> = {
+  12000: 20,
+  18000: 20,
+  24000: 19,
+  36000: 18,
+};
 
 type CommissionMode = "pv" | "full";
 type PaymentPoint = [number, number];
@@ -119,6 +127,9 @@ export default function SunrunCalculator() {
   const [role, setRole] = useState(0.1);
   const [saleEpc, setSaleEpc] = useState(0);
   const [months, setMonths] = useState([0, 0, 0]);
+  const [pvWarning, setPvWarning] = useState(false);
+  const [futureBtu, setFutureBtu] = useState(0);
+  const [futureHours, setFutureHours] = useState(0);
 
   const result = useMemo(() => {
     const eligible = panels >= 10 && !(batteries >= 2 && panels < 22);
@@ -139,7 +150,10 @@ export default function SunrunCalculator() {
 
     const baseSystem = eligible ? pv + batteryTotal : 0;
     const epcBase = eligible && watts ? baseSystem / watts : 0;
-    const finalEpc = saleEpc > 0 ? saleEpc : epcBase;
+    const requestedSaleEpc = saleEpc > 0 ? saleEpc : epcBase;
+    const finalEpc = commissionMode === "pv"
+      ? Math.min(requestedSaleEpc, epcBase)
+      : requestedSaleEpc;
     const saleSystem = eligible ? watts * finalEpc : 0;
 
     // El diferencial se mantiene con signo. Si se vende por debajo del EPC base,
@@ -152,6 +166,19 @@ export default function SunrunCalculator() {
     const average = months.reduce((sum, item) => sum + item, 0) / 3;
     const annualConsumption = average * 12;
     const offset = annualConsumption ? (annual / annualConsumption) * 100 : 0;
+    const panelsAt120 = average > 0
+      ? Math.ceil((average * 1.2) / PANEL_MONTHLY_KWH)
+      : 0;
+
+    const futureSeer = AIR_SEER[futureBtu] || 0;
+    const futureMonthlyConsumption = futureBtu > 0 && futureSeer > 0 && futureHours > 0
+      ? ((futureBtu / futureSeer) / 1000) * futureHours * 30
+      : 0;
+    const futurePanels = futureMonthlyConsumption > 0
+      ? Math.ceil(futureMonthlyConsumption / PANEL_MONTHLY_KWH)
+      : 0;
+    const recommendedFinalPanels = panelsAt120 + futurePanels;
+
     const fixed = eligible ? paymentEstimate(fixedTable, panels, batteries, finalEpc) : 0;
     const stepped = eligible ? paymentEstimate(steppedTable, panels, batteries, finalEpc) : 0;
 
@@ -168,11 +195,37 @@ export default function SunrunCalculator() {
       average,
       annualConsumption,
       offset,
+      panelsAt120,
+      futureSeer,
+      futureMonthlyConsumption,
+      futurePanels,
+      recommendedFinalPanels,
       fixed,
       stepped,
       baseCommission: commissionBase * role,
     };
-  }, [commissionMode, panels, batteries, role, saleEpc, months]);
+  }, [commissionMode, panels, batteries, role, saleEpc, months, futureBtu, futureHours]);
+
+  useEffect(() => {
+    if (commissionMode === "pv" && saleEpc > 0 && saleEpc > result.epcBase) {
+      setSaleEpc(result.epcBase);
+      setPvWarning(true);
+    }
+    if (commissionMode === "full") {
+      setPvWarning(false);
+    }
+  }, [commissionMode, result.epcBase, saleEpc]);
+
+  const handleSaleEpcChange = (value: number) => {
+    if (commissionMode === "pv" && value > result.epcBase) {
+      setPvWarning(true);
+      setSaleEpc(result.epcBase);
+      return;
+    }
+
+    setPvWarning(false);
+    setSaleEpc(value);
+  };
 
   return (
     <div className="calculator-grid">
@@ -183,7 +236,10 @@ export default function SunrunCalculator() {
           <button
             type="button"
             className={commissionMode === "full" ? "active" : ""}
-            onClick={() => setCommissionMode("full")}
+            onClick={() => {
+              setCommissionMode("full");
+              setPvWarning(false);
+            }}
           >
             Full Comisión
           </button>
@@ -201,12 +257,30 @@ export default function SunrunCalculator() {
           <Field label="Watts por panel"><div className="readout">410 W</div></Field>
           <Field label="Cantidad de baterías"><input type="number" min={0} value={batteries} onChange={(e) => setBatteries(Number(e.target.value))} /></Field>
           <Field label="Rol del vendedor"><select value={role} onChange={(e) => setRole(Number(e.target.value))}><option value={0.06}>Trainee — 6%</option><option value={0.1}>Consultor — 10%</option><option value={0.11}>Líder — 11%</option><option value={0.12}>Gerente — 12%</option><option value={0.14}>Partner — 14%</option><option value={0.16}>Partner Ejecutivo — 16%</option></select></Field>
-          <Field label="EPC de venta" full><input type="number" step="0.01" value={saleEpc || ""} placeholder={result.epcBase.toFixed(2)} onChange={(e) => setSaleEpc(Number(e.target.value))} /></Field>
+          <Field label="EPC de venta" full>
+            <input
+              type="number"
+              step="0.01"
+              max={commissionMode === "pv" ? result.epcBase : undefined}
+              value={saleEpc || ""}
+              placeholder={result.epcBase.toFixed(2)}
+              onChange={(e) => handleSaleEpcChange(Number(e.target.value))}
+            />
+            {pvWarning ? <div className="alert">Para tener excedente debe ser con Full Comisión</div> : null}
+          </Field>
         </div>
         {!result.eligible ? <div className="alert">Sistema no elegible. Mínimo 10 paneles; 2 baterías requieren 22 paneles.</div> : null}
         <div className="hero-metrics"><Metric label="EPC base" value={result.epcBase.toFixed(2)} tone="blue" /><Metric label="EPC venta" value={result.finalEpc.toFixed(2)} tone="blue" /></div>
         <div className="hero-metrics"><Metric label="Pago fijo aproximado" value={money(result.fixed)} /><Metric label="Pago escalonado aproximado" value={money(result.stepped)} tone="gold" /></div>
-        <div className="consumption-block"><h3>Promedio de consumo</h3><div className="form-grid compact">{months.map((value, index) => <Field key={index} label={`Mes alto ${index + 1}`}><input type="number" value={value} onChange={(e) => setMonths((current) => current.map((item, i) => i === index ? Number(e.target.value) : item))} /></Field>)}</div></div>
+
+        <div className="consumption-block">
+          <h3>Promedio de consumo</h3>
+          <div className="form-grid compact">{months.map((value, index) => <Field key={index} label={`Mes alto ${index + 1}`}><input type="number" value={value} onChange={(e) => setMonths((current) => current.map((item, i) => i === index ? Number(e.target.value) : item))} /></Field>)}</div>
+          <div className="hero-metrics">
+            <Metric label="Promedio mensual" value={`${number(result.average)} kWh`} />
+            <Metric label="Paneles recomendados al 120%" value={`${result.panelsAt120} paneles`} tone="blue" />
+          </div>
+        </div>
       </section>
 
       <section className="module-card">
@@ -225,6 +299,31 @@ export default function SunrunCalculator() {
             tone="gold"
             note={result.margin > 4000 ? "70% vendedor · 30% compañía" : ""}
           />
+        </div>
+
+        <div className="consumption-block">
+          <h3>Consumos futuros</h3>
+          <div className="form-grid compact">
+            <Field label="Aire acondicionado">
+              <select value={futureBtu} onChange={(e) => setFutureBtu(Number(e.target.value))}>
+                <option value={0}>Seleccionar BTU</option>
+                <option value={12000}>12,000 BTU</option>
+                <option value={18000}>18,000 BTU</option>
+                <option value={24000}>24,000 BTU</option>
+                <option value={36000}>36,000 BTU</option>
+              </select>
+            </Field>
+            <Field label="SEER estimado"><div className="readout">{result.futureSeer || "—"}</div></Field>
+            <Field label="Horas de uso diario"><input type="number" min={0} max={24} step="0.5" value={futureHours || ""} placeholder="Ej: 8" onChange={(e) => setFutureHours(Number(e.target.value))} /></Field>
+          </div>
+          <div className="hero-metrics">
+            <Metric label="Consumo adicional estimado" value={`${number(result.futureMonthlyConsumption)} kWh/mes`} />
+            <Metric label="Paneles adicionales" value={`+${result.futurePanels} paneles`} tone="blue" />
+          </div>
+          <div className="hero-metrics">
+            <Metric label="Sistema base al 120%" value={`${result.panelsAt120} paneles`} />
+            <Metric label="Sistema recomendado final" value={`${result.recommendedFinalPanels} paneles`} tone="gold" />
+          </div>
         </div>
       </section>
     </div>
