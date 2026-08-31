@@ -164,10 +164,14 @@ export default function SunrunCalculator() {
       : requestedSaleEpc;
     const saleSystem = eligible ? watts * finalEpc : 0;
 
-    // El diferencial se mantiene con signo. Si se vende por debajo del EPC base,
-    // la comisión de venta será negativa y se resta, como en la lógica original.
     const margin = saleSystem - baseSystem;
-    const saleCommission = margin > 4000 ? margin * 0.7 : margin;
+    const baseCommission = commissionBase * role;
+    const commissionAdjustment = margin < 0
+      ? margin * role
+      : margin > 4000
+        ? margin * 0.7
+        : margin;
+    const saleCommission = baseCommission + commissionAdjustment;
 
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
@@ -225,7 +229,7 @@ export default function SunrunCalculator() {
       recommendedFinalPanels,
       fixed,
       stepped,
-      baseCommission: commissionBase * role,
+      baseCommission,
     };
   }, [commissionMode, panels, batteries, role, saleEpc, months, futureAirs]);
 
