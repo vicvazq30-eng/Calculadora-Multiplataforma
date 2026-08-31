@@ -171,7 +171,7 @@ export default function SunrunCalculator() {
       : margin > 4000
         ? margin * 0.7
         : margin;
-    const saleCommission = baseCommission + commissionAdjustment;
+    const saleCommission = commissionAdjustment;
 
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
