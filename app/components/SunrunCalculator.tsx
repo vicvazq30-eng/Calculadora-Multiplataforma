@@ -140,7 +140,7 @@ export default function SunrunCalculator() {
   ]);
 
   const result = useMemo(() => {
-    const eligible = panels >= 10 && !(batteries >= 2 && panels < 22);
+    const eligible = panels >= 10 && !(batteries >= 2 && panels < 20);
     const watts = panels * WATTS;
     const pv = eligible ? watts * SOLAR_RATE : 0;
 
@@ -315,7 +315,7 @@ export default function SunrunCalculator() {
             {pvWarning ? <div className="alert">Para tener excedente debe ser con Full Comisión</div> : null}
           </Field>
         </div>
-        {!result.eligible ? <div className="alert">Sistema no elegible. Mínimo 10 paneles; 2 baterías requieren 22 paneles.</div> : null}
+        {!result.eligible ? <div className="alert">Sistema no elegible. Mínimo 10 paneles; 2 baterías requieren 20 paneles.</div> : null}
         <div className="hero-metrics"><Metric label="EPC base" value={result.epcBase.toFixed(2)} tone="blue" /><Metric label="EPC venta" value={result.finalEpc.toFixed(2)} tone="blue" /></div>
         <div className="hero-metrics"><Metric label="Pago fijo aproximado" value={money(result.fixed)} /><Metric label="Pago escalonado aproximado" value={money(result.stepped)} tone="gold" /></div>
 
