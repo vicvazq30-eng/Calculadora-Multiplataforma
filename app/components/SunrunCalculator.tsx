@@ -164,14 +164,13 @@ export default function SunrunCalculator() {
       : requestedSaleEpc;
     const saleSystem = eligible ? watts * finalEpc : 0;
 
-    const margin = saleSystem - baseSystem;
+    const epcBaseForAdjustment = Number(epcBase.toFixed(2));
+    const saleEpcForAdjustment = saleEpc > 0
+      ? Number(finalEpc.toFixed(2))
+      : epcBaseForAdjustment;
+    const margin = eligible ? (saleEpcForAdjustment - epcBaseForAdjustment) * watts : 0;
     const baseCommission = commissionBase * role;
-    const commissionAdjustment = margin < 0
-      ? margin * role
-      : margin > 4000
-        ? margin * 0.7
-        : margin;
-    const saleCommission = commissionAdjustment;
+    const saleCommission = margin > 4000 ? margin * 0.7 : margin;
 
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
