@@ -194,14 +194,23 @@ export default function MacCalculator() {
               <option value="economy">Economy Solar</option>
               <option value="lastChance">Last Chance</option>
             </select>
-            {priceTier === "economy" ? (
-              <div className="alert">
-                Advertencia: al utilizar Economy Solar, su comisión se verá afectada y será determinada por el Gerente General.
-              </div>
-            ) : null}
-            {priceTier === "lastChance" ? (
-              <div className="alert">
-                Advertencia: al utilizar Last Chance, su comisión será una cantidad fija y será designada por el Gerente General.
+            {priceTier !== "suggested" ? (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "12px 14px",
+                  border: "1px solid #f59e0b",
+                  borderRadius: 14,
+                  background: "#fffbeb",
+                  color: "#92400e",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  lineHeight: 1.4,
+                }}
+              >
+                {priceTier === "economy"
+                  ? "Advertencia: al utilizar Economy Solar, su comisión se verá afectada y será determinada por el Gerente General."
+                  : "Advertencia: al utilizar Last Chance, su comisión será una comisión flat y será designada por el Gerente General."}
               </div>
             ) : null}
           </Field>
