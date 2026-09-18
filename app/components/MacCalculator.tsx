@@ -123,9 +123,9 @@ export default function MacCalculator() {
 
           <Field label="Nivel de precio">
             <select value={priceTier} onChange={(e) => setPriceTier(e.target.value as PriceTier)}>
-              <option value="suggested">Precio Sugerido — $2.50/W</option>
-              <option value="economy">Economy Solar — $2.25/W</option>
-              <option value="lastChance">Last Chance — $2.00/W</option>
+              <option value="suggested">Precio Sugerido</option>
+              <option value="economy">Economy Solar</option>
+              <option value="lastChance">Last Chance</option>
             </select>
           </Field>
 
