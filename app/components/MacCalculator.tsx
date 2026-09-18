@@ -159,7 +159,7 @@ export default function MacCalculator() {
             />
           </Field>
 
-          <Field label="Rol del vendedor">
+          <Field label="Rol del vendedor" full>
             <select value={role} onChange={(e) => setRole(Number(e.target.value))}>
               <option value={0.06}>Trainee — 6%</option>
               <option value={0.1}>Consultor — 10%</option>
