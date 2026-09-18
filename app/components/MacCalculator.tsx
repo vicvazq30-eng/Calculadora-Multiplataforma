@@ -16,6 +16,7 @@ type FutureAir = {
 const HOURS = 1440;
 const PANEL_WATTS = 560;
 const PANEL_MONTHLY_KWH = ((PANEL_WATTS * HOURS) / 1000) / 12;
+// Cash pricing warnings: Economy Solar and Last Chance.
 
 const AIR_SEER_OPTIONS: Record<number, number[]> = {
   12000: [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
