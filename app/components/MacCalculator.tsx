@@ -5,9 +5,24 @@ import { Field, Metric, money, number } from "./ui";
 
 type PriceTier = "suggested" | "economy" | "lastChance";
 type BatteryBrand = "none" | "soltech128" | "soltech102" | "tesla" | "sonnen" | "eg4";
+type FutureAir = {
+  id: number;
+  btu: number;
+  seer: number;
+  hours: number;
+  customSeer: boolean;
+};
 
 const HOURS = 1440;
 const PANEL_WATTS = 560;
+const PANEL_MONTHLY_KWH = ((PANEL_WATTS * HOURS) / 1000) / 12;
+
+const AIR_SEER_OPTIONS: Record<number, number[]> = {
+  12000: [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+  18000: [17, 18, 19, 20, 21, 22, 23, 23.5, 24, 24.5, 25, 26, 27, 27.5],
+  24000: [17, 18, 19, 20, 21, 21.5, 22, 23, 24, 24.5, 25, 26, 27],
+  36000: [16, 17, 18, 19, 20, 21, 22],
+};
 
 const SOLAR_RATES: Record<PriceTier, number> = {
   suggested: 2.5,
@@ -62,6 +77,9 @@ export default function MacCalculator() {
   const [batteryBrand, setBatteryBrand] = useState<BatteryBrand>("none");
   const [batteries, setBatteries] = useState(0);
   const [role, setRole] = useState(0.1);
+  const [futureAirs, setFutureAirs] = useState<FutureAir[]>([
+    { id: 1, btu: 0, seer: 0, hours: 0, customSeer: false },
+  ]);
 
   useEffect(() => {
     const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>(".platform-tab"));
@@ -90,6 +108,31 @@ export default function MacCalculator() {
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
 
+    const futureLoads = futureAirs.map((air) => {
+      const monthlyConsumption = air.btu > 0 && air.seer > 0 && air.hours > 0
+        ? ((air.btu / air.seer) / 1000) * air.hours * 30
+        : 0;
+      const panelsNeeded = monthlyConsumption > 0
+        ? Math.ceil(monthlyConsumption / PANEL_MONTHLY_KWH)
+        : 0;
+
+      return {
+        ...air,
+        monthlyConsumption,
+        panelsNeeded,
+      };
+    });
+
+    const futureMonthlyConsumption = futureLoads.reduce(
+      (sum, air) => sum + air.monthlyConsumption,
+      0,
+    );
+    const futurePanels = futureLoads.reduce(
+      (sum, air) => sum + air.panelsNeeded,
+      0,
+    );
+    const recommendedFinalPanels = safePanels + futurePanels;
+
     return {
       watts,
       kw,
@@ -97,8 +140,32 @@ export default function MacCalculator() {
       commission,
       annual,
       monthly,
+      futureLoads,
+      futureMonthlyConsumption,
+      futurePanels,
+      recommendedFinalPanels,
     };
-  }, [priceTier, panels, batteryBrand, batteries, role]);
+  }, [priceTier, panels, batteryBrand, batteries, role, futureAirs]);
+
+  const updateFutureAir = (id: number, updates: Partial<FutureAir>) => {
+    setFutureAirs((current) => current.map((air) => (
+      air.id === id ? { ...air, ...updates } : air
+    )));
+  };
+
+  const addFutureAir = () => {
+    setFutureAirs((current) => {
+      const nextId = Math.max(0, ...current.map((air) => air.id)) + 1;
+      return [
+        ...current,
+        { id: nextId, btu: 0, seer: 0, hours: 0, customSeer: false },
+      ];
+    });
+  };
+
+  const removeLastFutureAir = () => {
+    setFutureAirs((current) => current.length > 1 ? current.slice(0, -1) : current);
+  };
 
   return (
     <div className="calculator-grid">
@@ -186,6 +253,116 @@ export default function MacCalculator() {
           <Metric label="Producción anual" value={`${number(result.annual)} kWh`} />
           <Metric label="Producción mensual" value={`${number(result.monthly)} kWh`} />
           <Metric label="Comisión del vendedor" value={money(result.commission)} tone="gold" />
+        </div>
+
+        <div className="consumption-block">
+          <h3>Consumos futuros</h3>
+
+          {futureAirs.map((air, index) => {
+            const load = result.futureLoads.find((item) => item.id === air.id);
+            const seerOptions = AIR_SEER_OPTIONS[air.btu] || [];
+
+            return (
+              <div key={air.id} className={index > 0 ? "consumption-block" : ""}>
+                <strong style={{ display: "block", marginBottom: 9 }}>Aire {index + 1}</strong>
+
+                <div className="form-grid compact">
+                  <Field label="Aire acondicionado">
+                    <select
+                      value={air.btu}
+                      onChange={(e) => updateFutureAir(air.id, {
+                        btu: Number(e.target.value),
+                        seer: 0,
+                        customSeer: false,
+                      })}
+                    >
+                      <option value={0}>Seleccionar BTU</option>
+                      <option value={12000}>12,000 BTU</option>
+                      <option value={18000}>18,000 BTU</option>
+                      <option value={24000}>24,000 BTU</option>
+                      <option value={36000}>36,000 BTU</option>
+                    </select>
+                  </Field>
+
+                  <Field label="SEER / SEER2">
+                    <select
+                      value={air.customSeer ? "custom" : air.seer || ""}
+                      disabled={!air.btu}
+                      onChange={(e) => {
+                        if (e.target.value === "custom") {
+                          updateFutureAir(air.id, { customSeer: true, seer: 0 });
+                          return;
+                        }
+                        updateFutureAir(air.id, {
+                          customSeer: false,
+                          seer: Number(e.target.value),
+                        });
+                      }}
+                    >
+                      <option value="">Seleccionar SEER</option>
+                      {seerOptions.map((seer) => <option key={seer} value={seer}>{seer}</option>)}
+                      <option value="custom">Otro / valor exacto</option>
+                    </select>
+                  </Field>
+
+                  {air.customSeer ? (
+                    <Field label="SEER / SEER2 exacto">
+                      <input
+                        type="number"
+                        min={10}
+                        max={40}
+                        step="0.1"
+                        value={air.seer || ""}
+                        placeholder="Ej: 18.8"
+                        onChange={(e) => updateFutureAir(air.id, { seer: Number(e.target.value) })}
+                      />
+                    </Field>
+                  ) : null}
+
+                  <Field label="Horas de uso diario">
+                    <input
+                      type="number"
+                      min={0}
+                      max={24}
+                      step="0.5"
+                      value={air.hours || ""}
+                      placeholder="Ej: 8"
+                      onChange={(e) => updateFutureAir(air.id, { hours: Number(e.target.value) })}
+                    />
+                  </Field>
+                </div>
+
+                <div className="inline-summary">
+                  <span>SEER usado<strong>{air.seer || "—"}</strong></span>
+                  <span>Consumo mensual<strong>{number(load?.monthlyConsumption || 0)} kWh</strong></span>
+                  <span>Paneles para este aire<strong>+{load?.panelsNeeded || 0}</strong></span>
+                </div>
+              </div>
+            );
+          })}
+
+          <div
+            className="segmented"
+            style={{
+              gridTemplateColumns: futureAirs.length > 1 ? "1fr 1fr" : "1fr",
+              marginTop: 12,
+            }}
+          >
+            <button type="button" className="active" onClick={addFutureAir}>Añadir otro aire</button>
+            {futureAirs.length > 1 ? (
+              <button type="button" onClick={removeLastFutureAir}>Quitar último aire</button>
+            ) : null}
+          </div>
+
+          <div className="hero-metrics">
+            <Metric label="Consumo futuro total" value={`${number(result.futureMonthlyConsumption)} kWh/mes`} />
+            <Metric label="Paneles adicionales totales" value={`+${result.futurePanels} paneles`} tone="blue" />
+          </div>
+
+          <div className="hero-metrics">
+            <Metric label="Sistema seleccionado" value={`${Math.min(53, Math.max(10, Number(panels) || 10))} paneles`} />
+            <Metric label="Sistema recomendado final" value={`${result.recommendedFinalPanels} paneles`} tone="gold" />
+          </div>
         </div>
       </section>
     </div>
