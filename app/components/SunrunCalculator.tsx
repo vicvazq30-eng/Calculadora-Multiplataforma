@@ -170,7 +170,7 @@ export default function SunrunCalculator() {
       : epcBaseForAdjustment;
     const margin = eligible ? (saleEpcForAdjustment - epcBaseForAdjustment) * watts : 0;
     const baseCommission = commissionBase * role;
-    const saleCommission = margin > 4000 ? margin * 0.7 : margin;
+    const saleCommission = margin > 0 ? margin * 0.7 : margin;
 
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
@@ -343,7 +343,7 @@ export default function SunrunCalculator() {
             label="Comisión de venta"
             value={money(result.saleCommission)}
             tone="gold"
-            note={result.margin > 4000 ? "70% vendedor · 30% compañía" : ""}
+            note={result.margin > 0 ? "70% vendedor · 30% compañía" : ""}
           />
         </div>
 
