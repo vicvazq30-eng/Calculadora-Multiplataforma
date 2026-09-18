@@ -194,6 +194,11 @@ export default function MacCalculator() {
               <option value="economy">Economy Solar</option>
               <option value="lastChance">Last Chance</option>
             </select>
+            {priceTier === "economy" ? (
+              <div className="alert">
+                Advertencia: al utilizar Economy Solar, su comisión se verá afectada y será determinada por el Gerente General.
+              </div>
+            ) : null}
           </Field>
 
           <Field label="Marca de batería">
