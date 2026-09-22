@@ -302,7 +302,7 @@ export default function SunrunCalculator() {
           <Field label="Cantidad de paneles"><input type="number" min={0} value={panels} onChange={(e) => setPanels(Number(e.target.value))} /></Field>
           <Field label="Watts por panel"><div className="readout">410 W</div></Field>
           <Field label="Cantidad de baterías"><input type="number" min={0} value={batteries} onChange={(e) => setBatteries(Number(e.target.value))} /></Field>
-          <Field label="Rol del vendedor"><select value={role} onChange={(e) => setRole(Number(e.target.value))}><option value={0.06}>Trainee — 6%</option><option value={0.1}>Consultor — 10%</option><option value={0.11}>Líder — 11%</option><option value={0.12}>Gerente — 12%</option><option value={0.14}>Partner — 14%</option><option value={0.16}>Partner Ejecutivo — 16%</option></select></Field>
+          <Field label="Rol del vendedor"><select value={role} onChange={(e) => setRole(Number(e.target.value))}><option value={0.06}>Trainee — 6%</option><option value={0.1}>Consultor — 10%</option><option value={0.11}>Líder — 11%</option><option value={0.12}>Gerente — 12%</option><option value={0.13}>Gerente Ejecutivo — 13%</option><option value={0.14}>Jr. Partner — 14%</option><option value={0.15}>Partner — 15%</option><option value={0.16}>Partner Ejecutivo — 16%</option></select></Field>
           <Field label="EPC de venta" full>
             <input
               type="number"
