@@ -252,7 +252,9 @@ export default function MacCalculator() {
               <option value={0.1}>Consultor — 10%</option>
               <option value={0.11}>Líder — 11%</option>
               <option value={0.12}>Gerente — 12%</option>
-              <option value={0.14}>Partner — 14%</option>
+              <option value={0.13}>Gerente Ejecutivo — 13%</option>
+              <option value={0.14}>Jr. Partner — 14%</option>
+              <option value={0.15}>Partner — 15%</option>
               <option value={0.16}>Partner Ejecutivo — 16%</option>
             </select>
           </Field>
