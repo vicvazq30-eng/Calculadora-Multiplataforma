@@ -5,7 +5,7 @@ import { Field, Metric, money, number } from "./ui";
 
 type PriceTier = "suggested" | "economy" | "lastChance";
 type SellerRole = "trainee" | "consultor" | "lider" | "gerente" | "gerenteEjecutivo" | "partner" | "partnerEjecutivo";
-type BatteryBrand = "none" | "soltech218" | "soltech128" | "soltech102" | "tesla" | "sonnen" | "eg4";
+type BatteryBrand = "none" | "soltech218" | "soltech178" | "soltech128" | "soltech102" | "tesla" | "sonnen" | "eg4";
 type FutureAir = {
   id: number;
   btu: number;
@@ -64,22 +64,25 @@ const COMMISSION_RATES: Record<PriceTier, Record<SellerRole, number>> = {
 
 const SOLTECH_BASE_COSTS: Record<
   PriceTier,
-  Record<"soltech218" | "soltech128" | "soltech102", number>
+  Record<"soltech218" | "soltech178" | "soltech128" | "soltech102", number>
 > = {
   suggested: {
-    soltech218: 12000,
-    soltech128: 12000,
-    soltech102: 11000,
+    soltech218: 13000,
+    soltech178: 12000,
+    soltech128: 11000,
+    soltech102: 10000,
   },
   economy: {
-    soltech218: 12000,
-    soltech128: 10000,
-    soltech102: 8000,
+    soltech218: 13000,
+    soltech178: 12000,
+    soltech128: 11000,
+    soltech102: 10000,
   },
   lastChance: {
     soltech218: 12000,
+    soltech178: 11000,
     soltech128: 10000,
-    soltech102: 8000,
+    soltech102: 9000,
   },
 };
 
@@ -91,7 +94,7 @@ const LEGACY_BATTERY_BASE_COSTS: Record<"tesla" | "sonnen" | "eg4", number> = {
 
 function batteryBaseCost(priceTier: PriceTier, batteryBrand: BatteryBrand) {
   if (batteryBrand === "none") return 0;
-  if (batteryBrand === "soltech218" || batteryBrand === "soltech128" || batteryBrand === "soltech102") {
+  if (batteryBrand === "soltech218" || batteryBrand === "soltech178" || batteryBrand === "soltech128" || batteryBrand === "soltech102") {
     return SOLTECH_BASE_COSTS[priceTier][batteryBrand];
   }
   return LEGACY_BATTERY_BASE_COSTS[batteryBrand];
@@ -263,6 +266,7 @@ export default function MacCalculator() {
             >
               <option value="none">Sin batería</option>
               <option value="soltech218">Soltech ESS 21.8 kWh</option>
+              <option value="soltech178">Soltech ESS 17.8 kWh</option>
               <option value="soltech128">Soltech ESS 12.8 kWh</option>
               <option value="soltech102">Soltech ESS 10.2 kWh</option>
               <option value="tesla">Tesla</option>
