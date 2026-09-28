@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Field, Metric, money, number } from "./ui";
 
 type PriceTier = "suggested" | "economy" | "lastChance";
+type SellerRole = "trainee" | "consultor" | "lider" | "gerente" | "gerenteEjecutivo" | "partner" | "partnerEjecutivo";
 type BatteryBrand = "none" | "soltech218" | "soltech128" | "soltech102" | "tesla" | "sonnen" | "eg4";
 type FutureAir = {
   id: number;
@@ -29,6 +30,36 @@ const SOLAR_RATES: Record<PriceTier, number> = {
   suggested: 2.5,
   economy: 2.25,
   lastChance: 2.0,
+};
+
+const COMMISSION_RATES: Record<PriceTier, Record<SellerRole, number>> = {
+  suggested: {
+    trainee: 0.06,
+    consultor: 0.10,
+    lider: 0.11,
+    gerente: 0.12,
+    gerenteEjecutivo: 0.14,
+    partner: 0.15,
+    partnerEjecutivo: 0.16,
+  },
+  economy: {
+    trainee: 0.03,
+    consultor: 0.04,
+    lider: 0.06,
+    gerente: 0.08,
+    gerenteEjecutivo: 0.10,
+    partner: 0.11,
+    partnerEjecutivo: 0.12,
+  },
+  lastChance: {
+    trainee: 0.02,
+    consultor: 0.03,
+    lider: 0.04,
+    gerente: 0.05,
+    gerenteEjecutivo: 0.06,
+    partner: 0.07,
+    partnerEjecutivo: 0.08,
+  },
 };
 
 const SOLTECH_BASE_COSTS: Record<
@@ -80,7 +111,7 @@ export default function MacCalculator() {
   const [panels, setPanels] = useState(20);
   const [batteryBrand, setBatteryBrand] = useState<BatteryBrand>("none");
   const [batteries, setBatteries] = useState(0);
-  const [role, setRole] = useState(0.1);
+  const [sellerRole, setSellerRole] = useState<SellerRole>("consultor");
   const [futureAirs, setFutureAirs] = useState<FutureAir[]>([
     { id: 1, btu: 0, seer: 0, hours: 0, customSeer: false },
   ]);
@@ -108,7 +139,8 @@ export default function MacCalculator() {
     const batteryTotal = batteryCostTotal(priceTier, batteryBrand, safeBatteries);
 
     const systemTotal = solarValue + batteryTotal;
-    const commission = systemTotal * role;
+    const commissionRate = COMMISSION_RATES[priceTier][sellerRole];
+    const commission = systemTotal * commissionRate;
     const annual = (watts * HOURS) / 1000;
     const monthly = annual / 12;
 
@@ -149,7 +181,7 @@ export default function MacCalculator() {
       futurePanels,
       recommendedFinalPanels,
     };
-  }, [priceTier, panels, batteryBrand, batteries, role, futureAirs]);
+  }, [priceTier, panels, batteryBrand, batteries, sellerRole, futureAirs]);
 
   const updateFutureAir = (id: number, updates: Partial<FutureAir>) => {
     setFutureAirs((current) => current.map((air) => (
@@ -196,7 +228,7 @@ export default function MacCalculator() {
             <select value={priceTier} onChange={(e) => setPriceTier(e.target.value as PriceTier)}>
               <option value="suggested">Precio Sugerido</option>
               <option value="economy">Economy Solar</option>
-              <option value="lastChance">Last Chance</option>
+              <option value="lastChance">Super Economy Last Chance</option>
             </select>
             {priceTier !== "suggested" ? (
               <div
@@ -213,8 +245,8 @@ export default function MacCalculator() {
                 }}
               >
                 {priceTier === "economy"
-                  ? "Advertencia: al utilizar Economy Solar, su comisión se verá afectada y será determinada por el Gerente General."
-                  : "Advertencia: al utilizar Last Chance, su comisión será una comisión flat y será designada por el Gerente General."}
+                  ? "Economy Solar utiliza una escala de comisión ajustada por rol."
+                  : "Super Economy Last Chance utiliza una escala de comisión ajustada por rol."}
               </div>
             ) : null}
           </Field>
@@ -251,14 +283,14 @@ export default function MacCalculator() {
           </Field>
 
           <Field label="Rol del vendedor" full>
-            <select value={role} onChange={(e) => setRole(Number(e.target.value))}>
-              <option value={0.06}>Trainee — 6%</option>
-              <option value={0.1}>Consultor — 10%</option>
-              <option value={0.11}>Líder — 11%</option>
-              <option value={0.12}>Gerente — 12%</option>
-              <option value={0.14}>Jr. Partner — 14%</option>
-              <option value={0.15}>Partner — 15%</option>
-              <option value={0.16}>Partner Ejecutivo — 16%</option>
+            <select value={sellerRole} onChange={(e) => setSellerRole(e.target.value as SellerRole)}>
+              <option value="trainee">Trainee — {Math.round(COMMISSION_RATES[priceTier].trainee * 100)}%</option>
+              <option value="consultor">Consultor — {Math.round(COMMISSION_RATES[priceTier].consultor * 100)}%</option>
+              <option value="lider">Líder — {Math.round(COMMISSION_RATES[priceTier].lider * 100)}%</option>
+              <option value="gerente">Gerente — {Math.round(COMMISSION_RATES[priceTier].gerente * 100)}%</option>
+              <option value="gerenteEjecutivo">Gerente Ejecutivo — {Math.round(COMMISSION_RATES[priceTier].gerenteEjecutivo * 100)}%</option>
+              <option value="partner">Partner — {Math.round(COMMISSION_RATES[priceTier].partner * 100)}%</option>
+              <option value="partnerEjecutivo">Partner Ejecutivo — {Math.round(COMMISSION_RATES[priceTier].partnerEjecutivo * 100)}%</option>
             </select>
           </Field>
         </div>
