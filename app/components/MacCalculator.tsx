@@ -132,7 +132,7 @@ export default function MacCalculator() {
   }, []);
 
   const result = useMemo(() => {
-    const safePanels = Math.max(10, Number(panels) || 10);
+    const safePanels = Math.max(6, Number(panels) || 6);
     const safeBatteries = Math.max(0, Number(batteries) || 0);
 
     const watts = safePanels * PANEL_WATTS;
@@ -219,7 +219,7 @@ export default function MacCalculator() {
           <Field label="Cantidad de paneles">
             <input
               type="number"
-              min={10}
+              min={6}
 
               step={1}
               value={panels}
@@ -421,7 +421,7 @@ export default function MacCalculator() {
           </div>
 
           <div className="hero-metrics">
-            <Metric label="Sistema seleccionado" value={`${Math.max(10, Number(panels) || 10)} paneles`} />
+            <Metric label="Sistema seleccionado" value={`${Math.max(6, Number(panels) || 6)} paneles`} />
             <Metric label="Sistema recomendado final" value={`${result.recommendedFinalPanels} paneles`} tone="gold" />
           </div>
         </div>
