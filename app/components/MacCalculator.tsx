@@ -117,6 +117,11 @@ export default function MacCalculator() {
   const [secondBatteryBrand, setSecondBatteryBrand] = useState<BatteryBrand>("none");
   const [secondBatteries, setSecondBatteries] = useState(0);
   const [sellerRole, setSellerRole] = useState<SellerRole>("consultor");
+  const [loanAmountOverride, setLoanAmountOverride] = useState<string | null>(null);
+  const [loanApr, setLoanApr] = useState("");
+  const [loanYears, setLoanYears] = useState("15");
+  const [loanMonths, setLoanMonths] = useState("0");
+  const [loanExtraPayment, setLoanExtraPayment] = useState("0");
   const [futureAirs, setFutureAirs] = useState<FutureAir[]>([
     { id: 1, btu: 0, seer: 0, hours: 0, customSeer: false },
   ]);
@@ -191,6 +196,47 @@ export default function MacCalculator() {
       recommendedFinalPanels,
     };
   }, [priceTier, panels, batteryBrand, batteries, secondBatteryBrand, secondBatteries, sellerRole, futureAirs]);
+
+  const loanAmount = loanAmountOverride === null ? result.systemTotal : Number(loanAmountOverride);
+  const loanEstimate = useMemo(() => {
+    const principal = loanAmount;
+    const apr = Number(loanApr);
+    const months = Math.trunc(Number(loanYears) * 12 + Number(loanMonths));
+    const extra = Number(loanExtraPayment);
+    if (!loanApr.trim() || !Number.isFinite(principal) || principal <= 0
+      || !Number.isFinite(apr) || apr < 0 || !Number.isFinite(months)
+      || months < 1 || months > 1200 || !Number.isFinite(extra) || extra < 0) {
+      return null;
+    }
+
+    const monthlyRate = apr / 1200;
+    const standardMonthly = monthlyRate === 0
+      ? principal / months
+      : principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+    if (!Number.isFinite(standardMonthly) || standardMonthly <= 0) return null;
+
+    // Amortize with any optional extra monthly payment, including a smaller final installment.
+    let balance = principal;
+    let totalPaid = 0;
+    let payments = 0;
+    for (let i = 0; i < months && balance > 0.000001; i += 1) {
+      const interest = balance * monthlyRate;
+      const payment = Math.min(standardMonthly + extra, balance + interest);
+      balance = Math.max(0, balance + interest - payment);
+      totalPaid += payment;
+      payments += 1;
+    }
+
+    return {
+      standardMonthly,
+      monthlyWithExtra: standardMonthly + extra,
+      totalPaid,
+      totalInterest: Math.max(0, totalPaid - principal),
+      annualPayment: standardMonthly * 12,
+      mortgageConstant: standardMonthly * 12 / principal * 100,
+      payments,
+    };
+  }, [loanAmount, loanApr, loanYears, loanMonths, loanExtraPayment]);
 
   const updateFutureAir = (id: number, updates: Partial<FutureAir>) => {
     setFutureAirs((current) => current.map((air) => (
@@ -335,6 +381,106 @@ export default function MacCalculator() {
               <option value="partnerEjecutivo">Partner Ejecutivo — {Math.round(COMMISSION_RATES[priceTier].partnerEjecutivo * 100)}%</option>
             </select>
           </Field>
+        </div>
+
+        <div className="consumption-block" style={{ marginTop: 24 }}>
+          <h3>Simulador de Loans</h3>
+          <p style={{ margin: "8px 0 16px", fontSize: 13, opacity: 0.8 }}>
+            Calcula un pago aproximado. La tasa anual la introduce el vendedor.
+          </p>
+
+          <div className="form-grid">
+            <Field label="Monto del préstamo ($)" full>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={loanAmountOverride === null ? result.systemTotal : loanAmountOverride}
+                onChange={(e) => setLoanAmountOverride(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setLoanAmountOverride(null)}
+                style={{
+                  marginTop: 8,
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 8,
+                  padding: "7px 12px",
+                  background: "transparent",
+                  color: "inherit",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Usar total del sistema Cash
+              </button>
+            </Field>
+
+            <Field label="Interés anual / APR (%)">
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Ej.: 4.99"
+                value={loanApr}
+                onChange={(e) => setLoanApr(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Años">
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={loanYears}
+                onChange={(e) => setLoanYears(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Meses adicionales">
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={loanMonths}
+                onChange={(e) => setLoanMonths(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Pago adicional mensual ($)">
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={loanExtraPayment}
+                onChange={(e) => setLoanExtraPayment(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="primary-result" style={{ marginTop: 18 }}>
+            <span>Pago mensual aproximado</span>
+            <strong>{loanEstimate ? money(loanEstimate.standardMonthly) : "—"}</strong>
+            <small>Sin incluir el pago adicional opcional.</small>
+          </div>
+
+          <div className="metrics-grid" style={{ marginTop: 12 }}>
+            <Metric label="Total de pagos" value={loanEstimate ? money(loanEstimate.totalPaid) : "—"} />
+            <Metric label="Total de intereses" value={loanEstimate ? money(loanEstimate.totalInterest) : "—"} />
+            <Metric label="Pago anual base" value={loanEstimate ? money(loanEstimate.annualPayment) : "—"} />
+            <Metric label="Constante anual" value={loanEstimate ? `${number(loanEstimate.mortgageConstant, 2)}%` : "—"} />
+            {Number(loanExtraPayment) > 0 ? (
+              <>
+                <Metric label="Pago mensual con extra" value={loanEstimate ? money(loanEstimate.monthlyWithExtra) : "—"} />
+                <Metric label="Meses para saldar" value={loanEstimate ? `${loanEstimate.payments}` : "—"} />
+              </>
+            ) : null}
+          </div>
+          <p style={{ margin: "12px 0 0", fontSize: 12, opacity: 0.75, lineHeight: 1.5 }}>
+            Estimado matemático de un préstamo amortizado con tasa fija. No es una oferta ni
+            aprobación de financiamiento. No incluye cargos, seguros ni otras condiciones de
+            una financiera. El total pagado y los intereses consideran el pago adicional, si aplica.
+          </p>
         </div>
       </section>
 
