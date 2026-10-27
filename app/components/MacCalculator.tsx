@@ -114,6 +114,8 @@ export default function MacCalculator() {
   const [panels, setPanels] = useState(20);
   const [batteryBrand, setBatteryBrand] = useState<BatteryBrand>("none");
   const [batteries, setBatteries] = useState(0);
+  const [secondBatteryBrand, setSecondBatteryBrand] = useState<BatteryBrand>("none");
+  const [secondBatteries, setSecondBatteries] = useState(0);
   const [sellerRole, setSellerRole] = useState<SellerRole>("consultor");
   const [futureAirs, setFutureAirs] = useState<FutureAir[]>([
     { id: 1, btu: 0, seer: 0, hours: 0, customSeer: false },
@@ -134,12 +136,16 @@ export default function MacCalculator() {
   const result = useMemo(() => {
     const safePanels = Math.max(6, Number(panels) || 6);
     const safeBatteries = Math.max(0, Number(batteries) || 0);
+    const safeSecondBatteries = Math.max(0, Number(secondBatteries) || 0);
 
     const watts = safePanels * PANEL_WATTS;
     const kw = watts / 1000;
     const solarValue = watts * SOLAR_RATES[priceTier];
 
-    const batteryTotal = batteryCostTotal(priceTier, batteryBrand, safeBatteries);
+    const batteryTotal = batteryBrand !== "none" && batteryBrand === secondBatteryBrand
+      ? batteryCostTotal(priceTier, batteryBrand, safeBatteries + safeSecondBatteries)
+      : batteryCostTotal(priceTier, batteryBrand, safeBatteries)
+        + batteryCostTotal(priceTier, secondBatteryBrand, safeSecondBatteries);
 
     const systemTotal = solarValue + batteryTotal;
     const commissionRate = COMMISSION_RATES[priceTier][sellerRole];
@@ -184,7 +190,7 @@ export default function MacCalculator() {
       futurePanels,
       recommendedFinalPanels,
     };
-  }, [priceTier, panels, batteryBrand, batteries, sellerRole, futureAirs]);
+  }, [priceTier, panels, batteryBrand, batteries, secondBatteryBrand, secondBatteries, sellerRole, futureAirs]);
 
   const updateFutureAir = (id: number, updates: Partial<FutureAir>) => {
     setFutureAirs((current) => current.map((air) => (
@@ -254,7 +260,7 @@ export default function MacCalculator() {
             ) : null}
           </Field>
 
-          <Field label="Marca de batería">
+          <Field label="Marca de batería 1">
             <select
               value={batteryBrand}
               onChange={(e) => {
@@ -275,7 +281,7 @@ export default function MacCalculator() {
             </select>
           </Field>
 
-          <Field label="Cantidad de baterías">
+          <Field label="Cantidad de baterías 1">
             <input
               type="number"
               min={0}
@@ -283,6 +289,38 @@ export default function MacCalculator() {
               disabled={batteryBrand === "none"}
               value={batteryBrand === "none" ? 0 : batteries}
               onChange={(e) => setBatteries(Number(e.target.value))}
+            />
+          </Field>
+
+          <Field label="Marca de batería 2 (opcional)">
+            <select
+              value={secondBatteryBrand}
+              onChange={(e) => {
+                const brand = e.target.value as BatteryBrand;
+                setSecondBatteryBrand(brand);
+                if (brand === "none") setSecondBatteries(0);
+                if (brand !== "none" && secondBatteries === 0) setSecondBatteries(1);
+              }}
+            >
+              <option value="none">Sin segunda batería</option>
+              <option value="soltech218">Soltech ESS 21.8 kWh</option>
+              <option value="soltech178">Soltech ESS 17.8 kWh</option>
+              <option value="soltech128">Soltech ESS 12.8 kWh</option>
+              <option value="soltech102">Soltech ESS 10.2 kWh</option>
+              <option value="tesla">Tesla</option>
+              <option value="sonnen">Sonnen</option>
+              <option value="eg4">EG4</option>
+            </select>
+          </Field>
+
+          <Field label="Cantidad de baterías 2">
+            <input
+              type="number"
+              min={0}
+              step={1}
+              disabled={secondBatteryBrand === "none"}
+              value={secondBatteryBrand === "none" ? 0 : secondBatteries}
+              onChange={(e) => setSecondBatteries(Number(e.target.value))}
             />
           </Field>
 
