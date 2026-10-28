@@ -128,7 +128,7 @@ function fullBatteryCost(batteries: number) {
 }
 
 export default function SunrunCalculator() {
-  const [commissionMode, setCommissionMode] = useState<CommissionMode>("pv");
+  const [commissionMode, setCommissionMode] = useState<CommissionMode>("full");
   const [panels, setPanels] = useState(20);
   const [batteries, setBatteries] = useState(1);
   const [role, setRole] = useState(0.1);
