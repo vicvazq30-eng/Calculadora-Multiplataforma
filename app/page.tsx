@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import SunrunCalculator from "./components/SunrunCalculator";
-import SunvidaCalculator from "./components/SunvidaCalculator";
 import MacCalculator from "./components/MacCalculator";
 
-type Platform = "sunrun" | "sunvida" | "mac";
+type Platform = "sunrun" | "mac";
 
 const platforms: Array<{ id: Platform; label: string; description: string }> = [
   { id: "sunrun", label: "Sunrun", description: "EPC, pagos y comisiones" },
-  { id: "sunvida", label: "SunVida", description: "SRP, Lease y Loan" },
   { id: "mac", label: "cash", description: "cash y comisiones" },
 ];
 
@@ -45,7 +43,6 @@ export default function HomePage() {
 
       <section className="module-stage">
         {platform === "sunrun" && <SunrunCalculator />}
-        {platform === "sunvida" && <SunvidaCalculator />}
         {platform === "mac" && <MacCalculator />}
       </section>
     </main>
