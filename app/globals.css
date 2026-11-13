@@ -29,7 +29,7 @@ button{cursor:pointer}
 .header-copy h1,.section-heading h2{margin:0;color:#25313d;letter-spacing:-.025em}
 .header-copy h1{font-size:28px}
 .header-copy>p:last-child{margin:6px 0 0;color:#7b8795;font-size:14px}
-.platform-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.platform-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
 .platform-tab{padding:15px 17px;text-align:left;background:#fff;border:1px solid #e3e8ee;border-radius:16px;color:#788491;transition:.18s ease}
 .platform-tab:hover{border-color:#cdd9e2;transform:translateY(-1px)}
 .platform-tab.active{border-color:#a8cddc;background:#fafdfe;box-shadow:inset 0 -3px 0 #78b8cf}
