@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#26313d;
+  background:#f7f9fc;
+  font-synthesis:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-width:320px;min-height:100vh}
+body{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app-shell{max-width:1240px;margin:auto;padding:28px 22px 42px}
+.brand-header{display:flex;align-items:center;gap:28px;padding:22px 26px;background:rgba(255,255,255,.9);border:1px solid #e7ebf0;border-radius:24px;box-shadow:0 16px 40px rgba(47,63,80,.055)}
+.brand-lockup{display:flex;align-items:center;gap:14px;min-width:260px}
+.brand-symbol{position:relative;width:62px;height:72px;flex:0 0 62px}
+.brand-flame{position:absolute;display:block;border-radius:70% 18% 65% 28%;transform:rotate(35deg);box-shadow:inset -5px -7px 10px rgba(255,255,255,.28)}
+.brand-flame-blue{width:42px;height:60px;left:9px;top:4px;background:linear-gradient(145deg,#2a92cc,#1f6fa7)}
+.brand-flame-gold{width:27px;height:43px;left:28px;top:20px;background:linear-gradient(145deg,#f0b43f,#dd7f20)}
+.brand-flame-green{width:18px;height:29px;left:18px;top:35px;background:linear-gradient(145deg,#63aa7c,#3e8661)}
+.brand-wordmark{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand-wordmark strong{font-size:38px;line-height:1;letter-spacing:-.04em;color:#2f84b6;font-weight:900}
+.brand-wordmark span{font-size:27px;line-height:1;letter-spacing:.08em;color:#de8c2e;font-weight:800}
+.header-copy{border-left:1px solid #e7ebf0;padding-left:28px}
+.eyebrow{margin:0 0 4px;font-size:11px;letter-spacing:.18em;font-weight:800;color:#5c96ae}
+.header-copy h1,.section-heading h2{margin:0;color:#25313d;letter-spacing:-.025em}
+.header-copy h1{font-size:28px}
+.header-copy>p:last-child{margin:6px 0 0;color:#7b8795;font-size:14px}
+.platform-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.platform-tab{padding:15px 17px;text-align:left;background:#fff;border:1px solid #e3e8ee;border-radius:16px;color:#788491;transition:.18s ease}
+.platform-tab:hover{border-color:#cdd9e2;transform:translateY(-1px)}
+.platform-tab.active{border-color:#a8cddc;background:#fafdfe;box-shadow:inset 0 -3px 0 #78b8cf}
+.platform-tab strong{display:block;color:#31404d;font-size:15px}
+.platform-tab.active strong{color:#4f8fa7}
+.platform-tab span{display:block;margin-top:3px;font-size:12px}
+.module-stage{animation:fade .22s ease}
+.calculator-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.module-card{background:#fff;border:1px solid #e5eaf0;border-radius:22px;padding:19px;box-shadow:0 12px 30px rgba(48,63,79,.05)}
+.section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.section-heading h2{font-size:21px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid.compact{grid-template-columns:repeat(2,1fr)}
+.field{display:block}
+.field.full{grid-column:1/-1}
+.field>span{display:block;margin:0 0 7px;color:#4d5a67;font-size:13px;font-weight:750}
+input,select,.readout{width:100%;height:46px;border:1px solid #dbe2e9;border-radius:12px;background:#fafbfd;color:#293744;padding:0 13px;font-weight:700}
+input:focus,select:focus{outline:none;border-color:#87bed2;box-shadow:0 0 0 3px rgba(120,184,207,.13);background:#fff}
+.readout{display:flex;align-items:center;color:#65727f}
+.hero-metrics,.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.metric-card{min-height:83px;padding:13px;border:1px solid #e4e9ee;border-radius:16px;background:#fbfcfd}
+.metric-card span{display:block;color:#7a8794;font-size:12px;font-weight:700}
+.metric-card strong{display:block;margin-top:8px;color:#2c3945;font-size:20px;line-height:1.15;font-weight:850}
+.metric-card small{display:block;margin-top:6px;color:#aa7f39;font-size:11px;font-weight:750}
+.metric-card.blue{background:#f1f8fa;border-color:#d5e9f0}
+.metric-card.blue strong{color:#4f8fa7;font-size:26px}
+.metric-card.gold{background:#fffaf2;border-color:#eee1c9}
+.metric-card.gold strong{color:#a77d37}
+.metric-card.soft{background:#f8fafc}
+.metric-card.green strong{color:#5f9478}
+.alert{margin-top:10px;padding:10px 12px;background:#fff7f7;border:1px solid #efdede;border-radius:12px;color:#ad6666;font-size:13px;font-weight:700}
+.consumption-block{margin-top:12px;padding-top:14px;border-top:1px solid #e8edf1}
+.consumption-block h3{margin:0 0 10px;font-size:15px}
+.inline-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.inline-summary span{padding:10px;border:1px solid #e6ebef;border-radius:12px;background:#fbfcfd;color:#7b8794;font-size:11px}
+.inline-summary strong{display:block;margin-top:4px;color:#34424f;font-size:15px}
+.segmented{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;padding:4px;background:#f5f7f9;border-radius:13px}
+.segmented button{height:38px;border:0;border-radius:10px;background:transparent;color:#778490;font-weight:750}
+.segmented button.active{background:#fff;color:#4f8fa7;box-shadow:0 2px 8px rgba(44,61,77,.07)}
+.primary-result{padding:18px;border:1px solid #d9e7ed;border-radius:18px;background:#f4fafc}
+.primary-result span{display:block;color:#71808d;font-size:12px;font-weight:700}
+.primary-result strong{display:block;margin-top:7px;color:#426f82;font-size:30px;letter-spacing:-.025em}
+.primary-result small{display:block;margin-top:5px;color:#83909c}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:860px){.app-shell{padding:16px 12px 28px}.brand-header{display:block;padding:18px}.brand-lockup{min-width:0}.header-copy{border-left:0;border-top:1px solid #e7ebf0;padding:16px 0 0;margin-top:14px}.platform-nav,.calculator-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.brand-wordmark strong{font-size:30px}.brand-wordmark span{font-size:21px}.form-grid,.form-grid.compact,.hero-metrics,.metrics-grid,.inline-summary{grid-template-columns:1fr}}
+
+
+/* Premium navy unified dashboard — independent visual skin; no formula changes. */
+:root{color:#eff8ff;background:#06172d;color-scheme:dark}
+html,body{background:#06172d;min-height:100vh}
+body{background:radial-gradient(ellipse at 86% -18%,#214a68 0%,transparent 40%),radial-gradient(ellipse at -12% 75%,#0d416b 0%,transparent 44%),#06172d;color:#f1f8ff}
+.app-shell{max-width:1370px;margin:auto;padding:24px 24px 54px}
+.brand-header{display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:180px;padding:32px 36px;border:1px solid #406b8a72;border-radius:24px;background:linear-gradient(110deg,#071d36,#0a2b4a 65%,#143c54);box-shadow:0 18px 55px #0004}
+.header-copy{padding:0;border:0;margin:0}
+.eyebrow{color:#67e5fa;font-size:11px;letter-spacing:.19em;font-weight:800}
+.header-copy h1{color:#fff;font-size:clamp(32px,4.8vw,58px);line-height:1.08;letter-spacing:-.055em;font-weight:850}
+.header-copy h1 em{color:#46d9f4;font-style:normal}
+.header-copy>p:last-child{color:#bfd2e4;font-size:14px;margin-top:13px}
+.header-aside{font-size:13px;line-height:1.8;color:#b6d0e1;text-align:right;letter-spacing:.02em}
+.platform-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:18px 0}
+.platform-tab{min-width:0;padding:20px 22px;text-align:left;border-radius:17px;background:linear-gradient(140deg,#0e3153,#09243e);border:1px solid #507895;color:#a9c8dd;transition:.15s ease}
+.platform-tab:hover{transform:translateY(-1px);border-color:#51d8f3}
+.platform-tab.active{background:linear-gradient(140deg,#145074,#0b3153);border:2px solid #45e3fa;box-shadow:0 0 0 2px #20d8f51a}
+.platform-tab strong,.platform-tab.active strong{display:block;color:#f4fbff;font-size:17px;font-weight:800}
+.platform-tab.active strong{color:#5ce5fa}
+.platform-tab span{color:#b6cfe0;font-size:12px;margin-top:5px}
+.module-stage[hidden]{display:none!important}
+.module-stage{animation:fade .2s ease}
+.module-card{background:linear-gradient(155deg,#0b2e50,#071d36 82%);border:1px solid #4d7695;border-radius:22px;padding:23px;color:#f1f8ff;box-shadow:0 14px 35px #0003}
+.section-heading h2{color:#fff;font-size:22px}
+.field>span{color:#d4e4f2}
+input,select,.readout{background:#061b32;color:#f5fbff;border:1px solid #547e9b;border-radius:11px}
+input:focus,select:focus{background:#082541;border-color:#4ce0f6;box-shadow:0 0 0 3px #32d8f524}
+input::placeholder{color:#89a5bc}
+select option{background:#071e38;color:#fff}
+.readout{color:#61e4f9}
+.metric-card{background:#0b2b49;border:1px solid #456f8e;border-radius:14px}
+.metric-card span{color:#a8c6da}
+.metric-card strong{color:#f5faff}
+.metric-card.blue{background:#0a3a5a;border-color:#2584a9}
+.metric-card.blue strong{color:#59e2f7}
+.metric-card.gold{background:#332b26;border-color:#856a43}
+.metric-card.gold strong{color:#f4c17c}
+.metric-card.soft{background:#092844}
+.metric-card.green strong{color:#88e0b3}
+.metric-card small{color:#f2c27c}
+.segmented{background:#061c33;border:1px solid #345d7c}
+.segmented button{color:#b1cadc}
+.segmented button.active{background:#145275;color:#eafaff;box-shadow:0 2px 12px #0004}
+.primary-result{background:linear-gradient(115deg,#0b3458,#0a426b);border:2px solid #39d8f4}
+.primary-result span{color:#c1dbea}
+.primary-result strong{color:#57e4f9}
+.primary-result small{color:#c1d5e5}
+.consumption-block{border-top:1px solid #426783}
+.consumption-block h3{color:#f3f9ff}
+.inline-summary span{background:#092744;border:1px solid #3e6887;color:#a8c6d9}
+.inline-summary strong{color:#f4faff}
+.alert{background:#4e2b294a;border-color:#b77066;color:#ffc3b3}
+.lightreach-frame{display:block;width:100%;border:0;background:#06172d;overflow:hidden;border-radius:20px}
+@media(max-width:860px){.app-shell{padding:14px 12px 35px}.brand-header{padding:24px;min-height:150px}.header-aside{display:none}.header-copy{border:0;padding:0;margin:0}.platform-nav{grid-template-columns:repeat(3,minmax(0,1fr))}.calculator-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.brand-header{padding:23px 18px;min-height:136px;border-radius:18px}.header-copy h1{font-size:clamp(27px,7vw,36px)}.header-copy>p:last-child{font-size:12px}.platform-nav{gap:7px;margin:12px 0}.platform-tab{padding:14px 6px;text-align:center;border-radius:12px}.platform-tab strong,.platform-tab.active strong{font-size:13px}.platform-tab span{display:none}.module-card{padding:16px;border-radius:17px}.lightreach-frame{border-radius:15px}}
